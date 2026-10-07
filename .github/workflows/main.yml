@@ -5,17 +5,22 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Patch sources BEFORE generate
+        run: |
+          find . -name "project.yml" -o -name "*.pbxproj" | xargs sed -i '' 's/26.0/17.0/g' || true
+          find . -name "project.yml" | xargs sed -i '' 's/deploymentTarget:.*/deploymentTarget: "17.0"/g' || true
+          grep -r "IPHONEOS_DEPLOYMENT_TARGET" . || true
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate project
         run: ./Scripts/generate-xcodeproj.sh
-      - name: Patch deployment target
+      - name: Patch again AFTER generate
         run: |
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 26.0/IPHONEOS_DEPLOYMENT_TARGET = 17.0/g' OpenGlasses.xcodeproj/project.pbxproj
-          sed -i '' 's/26.0/17.0/g' OpenGlasses/Sources/App/Info.plist || true
+          sed -i '' 's/26.0/17.0/g' OpenGlasses.xcodeproj/project.pbxproj
+          sed -i '' 's/26/17/g' OpenGlasses.xcodeproj/project.pbxproj || true
       - name: Build IPA
         run: |
-          xcodebuild -project OpenGlasses.xcodeproj -scheme OpenGlasses -configuration Release -sdk iphoneos -archivePath build/OpenGlasses.xcarchive archive CODE_SIGNING_ALLOWED=NO -skipPackagePluginValidation -skipMacroValidation IPHONEOS_DEPLOYMENT_TARGET=17.0
+          xcodebuild -project OpenGlasses.xcodeproj -scheme OpenGlasses -configuration Release -sdk iphoneos -archivePath build/OpenGlasses.xcarchive archive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -skipPackagePluginValidation -skipMacroValidation IPHONEOS_DEPLOYMENT_TARGET=17.0
           mkdir -p build/Payload
           cp -R build/OpenGlasses.xcarchive/Products/Applications/OpenGlasses.app build/Payload/
           cd build && zip -r OpenGlasses-unsigned.ipa Payload
