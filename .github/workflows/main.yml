@@ -9,9 +9,13 @@ jobs:
         run: brew install xcodegen
       - name: Generate project
         run: ./Scripts/generate-xcodeproj.sh
+      - name: Patch deployment target
+        run: |
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 26.0/IPHONEOS_DEPLOYMENT_TARGET = 17.0/g' OpenGlasses.xcodeproj/project.pbxproj
+          sed -i '' 's/26.0/17.0/g' OpenGlasses/Sources/App/Info.plist || true
       - name: Build IPA
         run: |
-          xcodebuild -project OpenGlasses.xcodeproj -scheme OpenGlasses -configuration Release -sdk iphoneos -archivePath build/OpenGlasses.xcarchive archive CODE_SIGNING_ALLOWED=NO -skipPackagePluginValidation -skipMacroValidation
+          xcodebuild -project OpenGlasses.xcodeproj -scheme OpenGlasses -configuration Release -sdk iphoneos -archivePath build/OpenGlasses.xcarchive archive CODE_SIGNING_ALLOWED=NO -skipPackagePluginValidation -skipMacroValidation IPHONEOS_DEPLOYMENT_TARGET=17.0
           mkdir -p build/Payload
           cp -R build/OpenGlasses.xcarchive/Products/Applications/OpenGlasses.app build/Payload/
           cd build && zip -r OpenGlasses-unsigned.ipa Payload
