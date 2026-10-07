@@ -2,7 +2,7 @@ name: Build IPA
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
@@ -11,7 +11,7 @@ jobs:
         run: ./Scripts/generate-xcodeproj.sh
       - name: Build IPA
         run: |
-          xcodebuild -project OpenGlasses.xcodeproj -scheme OpenGlasses -configuration Release -sdk iphoneos -archivePath build/OpenGlasses.xcarchive archive CODE_SIGNING_ALLOWED=NO
+          xcodebuild -project OpenGlasses.xcodeproj -scheme OpenGlasses -configuration Release -sdk iphoneos -archivePath build/OpenGlasses.xcarchive archive CODE_SIGNING_ALLOWED=NO -skipPackagePluginValidation -skipMacroValidation
           mkdir -p build/Payload
           cp -R build/OpenGlasses.xcarchive/Products/Applications/OpenGlasses.app build/Payload/
           cd build && zip -r OpenGlasses-unsigned.ipa Payload
